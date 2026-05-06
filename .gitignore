@@ -1,0 +1,19 @@
+# Build output
+bin/
+obj/
+
+# SQLite local database files
+*.db
+*.db-shm
+*.db-wal
+
+# Visual Studio local files
+.vs/
+
+# VS Code user-specific files
+.vscode/*.user
+.vscode/*.suo
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
