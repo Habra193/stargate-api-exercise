@@ -78,6 +78,8 @@ namespace StargateAPI.Controllers
                     });
                 }
 
+                name = name.Trim();
+
                 var exists = await _mediator.Send(new GetPersonByName()
                 {
                     Name = name
@@ -125,6 +127,9 @@ namespace StargateAPI.Controllers
                         ResponseCode = (int)HttpStatusCode.BadRequest
                     });
                 }
+
+                oldName = oldName.Trim();
+                request.NewName = request.NewName.Trim();
 
                 var existingPerson = await _mediator.Send(new GetPersonByName()
                 {

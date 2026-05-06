@@ -47,11 +47,46 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
     }
 
     [Fact]
+    public async Task CreatePerson_WithLeadingAndTrailingWhitespace_TrimsName()
+    {
+        var client = _factory.CreateClient();
+        var name = $"Trimmed Person {Guid.NewGuid():N}";
+
+        var response = await client.PostAsJsonAsync("/Person", $"  {name}  ");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<StargateContext>();
+        var trimmedPerson = await context.People.AsNoTracking().SingleOrDefaultAsync(x => x.Name == name);
+        var untrimmedPerson = await context.People.AsNoTracking().SingleOrDefaultAsync(x => x.Name == $"  {name}  ");
+
+        Assert.NotNull(trimmedPerson);
+        Assert.Null(untrimmedPerson);
+    }
+
+    [Fact]
     public async Task CreatePerson_WithExistingName_ReturnsBadRequest()
     {
         var client = _factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/Person", "John Doe");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<CreatePersonResult>();
+
+        Assert.NotNull(result);
+        Assert.False(result.Success);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.ResponseCode);
+    }
+
+    [Fact]
+    public async Task CreatePerson_WithExistingNameDifferentCasing_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/Person", "john doe");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
@@ -137,6 +172,24 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
     }
 
     [Fact]
+    public async Task GetPersonByName_WithDifferentCasing_ReturnsPerson()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/Person/john%20doe");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<GetPersonByNameResult>();
+
+        Assert.NotNull(result);
+        Assert.True(result.Success);
+        Assert.NotNull(result.Person);
+        Assert.Equal("John Doe", result.Person.Name);
+        Assert.Equal(1, result.Person.PersonId);
+    }
+
+    [Fact]
     public async Task GetPersonByName_WithMissingName_ReturnsNotFound()
     {
         var client = _factory.CreateClient();
@@ -182,6 +235,32 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
 
         Assert.Equal(HttpStatusCode.NotFound, oldNameResponse.StatusCode);
         Assert.Equal(HttpStatusCode.OK, newNameResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdatePersonName_WithLeadingAndTrailingWhitespace_TrimsNewName()
+    {
+        var client = _factory.CreateClient();
+        var oldName = $"Old Name {Guid.NewGuid():N}";
+        var newName = $"Trimmed New Name {Guid.NewGuid():N}";
+
+        var createResponse = await client.PostAsJsonAsync("/Person", oldName);
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+
+        var updateResponse = await client.PutAsJsonAsync(
+            $"/Person/{Uri.EscapeDataString($"  {oldName}  ")}",
+            new UpdatePersonNameRequest { NewName = $"  {newName}  " });
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<StargateContext>();
+        var trimmedPerson = await context.People.AsNoTracking().SingleOrDefaultAsync(x => x.Name == newName);
+        var untrimmedPerson = await context.People.AsNoTracking().SingleOrDefaultAsync(x => x.Name == $"  {newName}  ");
+
+        Assert.NotNull(trimmedPerson);
+        Assert.Null(untrimmedPerson);
     }
 
     [Fact]
