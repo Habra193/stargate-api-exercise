@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using StargateAPI.Business.Commands;
 using StargateAPI.Business.Data;
+using MediatR;
+using StargateAPI.Business.Logging;
+using StargateAPI.Business.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +16,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<StargateContext>(options => 
     options.UseSqlite(builder.Configuration.GetConnectionString("StarbaseApiDatabase")));
+
+builder.Services.AddScoped<IApplicationLogService, ApplicationLogService>(); //StargateContext is registered by AddDbContext, and EF registers DbContexts as scoped
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestLoggingBehavior<,>)); // transient because MediatR creates pipeline wrappers as needed for each request/response type, and they don’t need to live beyond that operation
+
 
 builder.Services.AddMediatR(cfg =>
 {

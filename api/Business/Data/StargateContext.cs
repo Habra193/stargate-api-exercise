@@ -9,6 +9,7 @@ namespace StargateAPI.Business.Data
         public DbSet<Person> People { get; set; }
         public DbSet<AstronautDetail> AstronautDetails { get; set; }
         public DbSet<AstronautDuty> AstronautDuties { get; set; }
+        public DbSet<ApplicationLog> ApplicationLogs { get; set; }
 
         public StargateContext(DbContextOptions<StargateContext> options)
         : base(options)
@@ -26,6 +27,8 @@ namespace StargateAPI.Business.Data
 
         private static void SeedData(ModelBuilder modelBuilder)
         {
+            var careerStartDate = new DateTime(2024, 1, 1);
+
             //add seed data
             modelBuilder.Entity<Person>()
                 .HasData(
@@ -49,7 +52,7 @@ namespace StargateAPI.Business.Data
                         PersonId = 1,
                         CurrentRank = "1LT",
                         CurrentDutyTitle = "Commander",
-                        CareerStartDate = DateTime.Now
+                        CareerStartDate = careerStartDate
                     }
                 );
 
@@ -59,7 +62,7 @@ namespace StargateAPI.Business.Data
                     {
                         Id = 1,
                         PersonId = 1,
-                        DutyStartDate = DateTime.Now,
+                        DutyStartDate = careerStartDate,
                         DutyTitle = "Commander",
                         Rank = "1LT"
                     }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StargateAPI.Business.Data;
 
@@ -10,9 +11,11 @@ using StargateAPI.Business.Data;
 namespace StargateAPI.Migrations
 {
     [DbContext(typeof(StargateContext))]
-    partial class StargateContextModelSnapshot : ModelSnapshot
+    [Migration("20260506121456_AddApplicationLog")]
+    partial class AddApplicationLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.4");
@@ -22,9 +25,6 @@ namespace StargateAPI.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("ExceptionMessage")
                         .HasColumnType("TEXT");
@@ -83,7 +83,7 @@ namespace StargateAPI.Migrations
                         new
                         {
                             Id = 1,
-                            CareerStartDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CareerStartDate = new DateTime(2026, 5, 6, 8, 14, 56, 369, DateTimeKind.Local).AddTicks(4098),
                             CurrentDutyTitle = "Commander",
                             CurrentRank = "1LT",
                             PersonId = 1
@@ -123,7 +123,7 @@ namespace StargateAPI.Migrations
                         new
                         {
                             Id = 1,
-                            DutyStartDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DutyStartDate = new DateTime(2026, 5, 6, 8, 14, 56, 369, DateTimeKind.Local).AddTicks(4152),
                             DutyTitle = "Commander",
                             PersonId = 1,
                             Rank = "1LT"
