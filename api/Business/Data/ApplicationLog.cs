@@ -1,6 +1,5 @@
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+
 namespace StargateAPI.Business.Data
 {
     [Table("ApplicationLog")] //prevents EF from infering table name

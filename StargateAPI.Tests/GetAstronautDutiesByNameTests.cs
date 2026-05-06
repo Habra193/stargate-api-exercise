@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using StargateAPI.Business.Commands;
 using StargateAPI.Business.Queries;
+using StargateAPI.Controllers;
 
 namespace StargateAPI.Tests;
 
@@ -130,11 +131,11 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
         Assert.True(getDutyResult.Success);
         Assert.NotNull(getDutyResult.Person);
         Assert.Equal("CAPT", getDutyResult.Person.CurrentRank);
-        Assert.Equal("PILOT", getDutyResult.Person.CurrentDutyTitle);
+        Assert.Equal("Pilot", getDutyResult.Person.CurrentDutyTitle);
 
         var duty = Assert.Single(getDutyResult.AstronautDuties);
         Assert.Equal("CAPT", duty.Rank);
-        Assert.Equal("PILOT", duty.DutyTitle);
+        Assert.Equal("Pilot", duty.DutyTitle);
         Assert.Equal(dutyStartDate, duty.DutyStartDate);
         Assert.Null(duty.DutyEndDate);
     }
@@ -198,11 +199,11 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
         Assert.True(getDutyResult.Success);
         Assert.NotNull(getDutyResult.Person);
         Assert.Equal("CAPT", getDutyResult.Person.CurrentRank);
-        Assert.Equal("PILOT", getDutyResult.Person.CurrentDutyTitle);
+        Assert.Equal("Pilot", getDutyResult.Person.CurrentDutyTitle);
 
         var duty = Assert.Single(getDutyResult.AstronautDuties);
         Assert.Equal("CAPT", duty.Rank);
-        Assert.Equal("PILOT", duty.DutyTitle);
+        Assert.Equal("Pilot", duty.DutyTitle);
     }
 
     [Fact]
@@ -240,11 +241,11 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
         Assert.True(getDutyResult.Success);
         Assert.NotNull(getDutyResult.Person);
         Assert.Equal("MAJ", getDutyResult.Person.CurrentRank);
-        Assert.Equal("COMMANDER", getDutyResult.Person.CurrentDutyTitle);
+        Assert.Equal("Commander", getDutyResult.Person.CurrentDutyTitle);
         Assert.Equal(2, getDutyResult.AstronautDuties.Count);
 
-        var currentDuty = getDutyResult.AstronautDuties.Single(x => x.DutyTitle == "COMMANDER");
-        var previousDuty = getDutyResult.AstronautDuties.Single(x => x.DutyTitle == "PILOT");
+        var currentDuty = getDutyResult.AstronautDuties.Single(x => x.DutyTitle == "Commander");
+        var previousDuty = getDutyResult.AstronautDuties.Single(x => x.DutyTitle == "Pilot");
 
         Assert.Equal(secondDutyStartDate, currentDuty.DutyStartDate);
         Assert.Null(currentDuty.DutyEndDate);
@@ -286,7 +287,7 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
         Assert.NotNull(getDutyResult);
         Assert.True(getDutyResult.Success);
         Assert.NotNull(getDutyResult.Person);
-        Assert.Equal("RETIRED", getDutyResult.Person.CurrentDutyTitle);
+        Assert.Equal("Retired", getDutyResult.Person.CurrentDutyTitle);
         Assert.Equal(retiredDutyStartDate.AddDays(-1), getDutyResult.Person.CareerEndDate);
     }
 
@@ -305,7 +306,7 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CreateAstronautDutyResult>();
+        var result = await response.Content.ReadFromJsonAsync<BaseResponse>();
 
         Assert.NotNull(result);
         Assert.False(result.Success);
@@ -333,7 +334,7 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
         Assert.Equal(HttpStatusCode.OK, firstDutyResponse.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, duplicateDutyResponse.StatusCode);
 
-        var result = await duplicateDutyResponse.Content.ReadFromJsonAsync<CreateAstronautDutyResult>();
+        var result = await duplicateDutyResponse.Content.ReadFromJsonAsync<BaseResponse>();
 
         Assert.NotNull(result);
         Assert.False(result.Success);
@@ -394,7 +395,7 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CreateAstronautDutyResult>();
+        var result = await response.Content.ReadFromJsonAsync<BaseResponse>();
 
         Assert.NotNull(result);
         Assert.False(result.Success);

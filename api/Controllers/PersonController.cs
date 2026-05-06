@@ -6,7 +6,6 @@ using System.Net;
 
 namespace StargateAPI.Controllers
 {
-   
     [ApiController]
     [Route("[controller]")]
     public class PersonController : ControllerBase
@@ -20,47 +19,16 @@ namespace StargateAPI.Controllers
         [HttpGet("")]
         public async Task<IActionResult> GetPeople()
         {
-            try
-            {
-                var result = await _mediator.Send(new GetPeople()
-                {
-
-                });
-
-                return this.GetResponse(result);
-            }
-            catch (Exception ex)
-            {
-                return this.GetResponse(new BaseResponse()
-                {
-                    Message = ex.Message,
-                    Success = false,
-                    ResponseCode = (int)HttpStatusCode.InternalServerError
-                });
-            }
+            return await SendResponseAsync(() => _mediator.Send(new GetPeople()));
         }
 
         [HttpGet("{name}")]
         public async Task<IActionResult> GetPersonByName(string name)
         {
-            try
+            return await SendResponseAsync(() => _mediator.Send(new GetPersonByName()
             {
-                var result = await _mediator.Send(new GetPersonByName()
-                {
-                    Name = name
-                });
-
-                return this.GetResponse(result);
-            }
-            catch (Exception ex)
-            {
-                return this.GetResponse(new BaseResponse()
-                {
-                    Message = ex.Message,
-                    Success = false,
-                    ResponseCode = (int)HttpStatusCode.InternalServerError
-                });
-            }
+                Name = name
+            }));
         }
 
         [HttpPost("")]
@@ -70,12 +38,7 @@ namespace StargateAPI.Controllers
             {
                 if (string.IsNullOrWhiteSpace(name))
                 {
-                    return this.GetResponse(new BaseResponse()
-                    {
-                        Message = "Person name is required",
-                        Success = false,
-                        ResponseCode = (int)HttpStatusCode.BadRequest
-                    });
+                    return this.GetErrorResponse("Person name is required", HttpStatusCode.BadRequest);
                 }
 
                 name = name.Trim();
@@ -87,13 +50,9 @@ namespace StargateAPI.Controllers
 
                 if (exists.Person is not null)
                 {
-                    return this.GetResponse(new BaseResponse()
-                    {
-                        Message = "Person already exists in database: " + name,
-                        Success = false,
-                        ResponseCode = (int)HttpStatusCode.BadRequest
-                    });
+                    return PersonAlreadyExistsResponse(name);
                 }
+
                 var result = await _mediator.Send(new CreatePerson()
                 {
                     Name = name
@@ -103,12 +62,7 @@ namespace StargateAPI.Controllers
             }
             catch (Exception ex)
             {
-                return this.GetResponse(new BaseResponse()
-                {
-                    Message = ex.Message,
-                    Success = false,
-                    ResponseCode = (int)HttpStatusCode.InternalServerError
-                });
+                return this.GetErrorResponse(ex.Message, HttpStatusCode.InternalServerError);
             }
 
         }
@@ -120,12 +74,7 @@ namespace StargateAPI.Controllers
             {
                 if (string.IsNullOrWhiteSpace(request.NewName))
                 {
-                    return this.GetResponse(new BaseResponse()
-                    {
-                        Message = "Person name is required",
-                        Success = false,
-                        ResponseCode = (int)HttpStatusCode.BadRequest
-                    });
+                    return this.GetErrorResponse("Person name is required", HttpStatusCode.BadRequest);
                 }
 
                 oldName = oldName.Trim();
@@ -148,12 +97,7 @@ namespace StargateAPI.Controllers
 
                 if (existingNewName.Person is not null)
                 {
-                    return this.GetResponse(new BaseResponse()
-                    {
-                        Message = "Person already exists in database: " + request.NewName,
-                        Success = false,
-                        ResponseCode = (int)HttpStatusCode.BadRequest
-                    });
+                    return PersonAlreadyExistsResponse(request.NewName);
                 }
 
                 var result = await _mediator.Send(new UpdatePersonName()
@@ -166,13 +110,27 @@ namespace StargateAPI.Controllers
             }
             catch (Exception ex)
             {
-                return this.GetResponse(new BaseResponse()
-                {
-                    Message = ex.Message,
-                    Success = false,
-                    ResponseCode = (int)HttpStatusCode.InternalServerError
-                });
+                return this.GetErrorResponse(ex.Message, HttpStatusCode.InternalServerError);
             }
+        }
+
+        private async Task<IActionResult> SendResponseAsync<TResponse>(Func<Task<TResponse>> send)
+            where TResponse : BaseResponse
+        {
+            try
+            {
+                var result = await send();
+                return this.GetResponse(result);
+            }
+            catch (Exception ex)
+            {
+                return this.GetErrorResponse(ex.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        private IActionResult PersonAlreadyExistsResponse(string name)
+        {
+            return this.GetErrorResponse("Person already exists in database: " + name, HttpStatusCode.BadRequest);
         }
     }
 

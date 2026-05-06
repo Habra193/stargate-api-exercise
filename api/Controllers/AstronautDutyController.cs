@@ -19,24 +19,10 @@ namespace StargateAPI.Controllers
         [HttpGet("{name}")]
         public async Task<IActionResult> GetAstronautDutiesByName(string name)
         {
-            try
+            return await SendResponseAsync(() => _mediator.Send(new GetAstronautDutiesByName()
             {
-                var result = await _mediator.Send(new GetAstronautDutiesByName()
-                {
-                    Name = name
-                });
-
-                return this.GetResponse(result);
-            }
-            catch (Exception ex)
-            {
-                return this.GetResponse(new BaseResponse()
-                {
-                    Message = ex.Message,
-                    Success = false,
-                    ResponseCode = (int)HttpStatusCode.InternalServerError
-                });
-            }            
+                Name = name
+            }));
         }
 
         [HttpPost("")]
@@ -49,21 +35,25 @@ namespace StargateAPI.Controllers
             }
             catch (BadHttpRequestException ex)
             {
-                return this.GetResponse(new CreateAstronautDutyResult()
-                {
-                    Message = ex.Message,
-                    Success = false,
-                    ResponseCode = (int)HttpStatusCode.BadRequest
-                });
+                return this.GetErrorResponse(ex.Message, HttpStatusCode.BadRequest);
             }
             catch (Exception ex)
             {
-                return this.GetResponse(new BaseResponse()
-                {
-                    Message = ex.Message,
-                    Success = false,
-                    ResponseCode = (int)HttpStatusCode.InternalServerError
-                });
+                return this.GetErrorResponse(ex.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        private async Task<IActionResult> SendResponseAsync<TResponse>(Func<Task<TResponse>> send)
+            where TResponse : BaseResponse
+        {
+            try
+            {
+                var result = await send();
+                return this.GetResponse(result);
+            }
+            catch (Exception ex)
+            {
+                return this.GetErrorResponse(ex.Message, HttpStatusCode.InternalServerError);
             }
         }
     }

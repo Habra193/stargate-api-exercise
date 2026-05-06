@@ -74,7 +74,7 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CreatePersonResult>();
+        var result = await response.Content.ReadFromJsonAsync<BaseResponse>();
 
         Assert.NotNull(result);
         Assert.False(result.Success);
@@ -90,7 +90,7 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CreatePersonResult>();
+        var result = await response.Content.ReadFromJsonAsync<BaseResponse>();
 
         Assert.NotNull(result);
         Assert.False(result.Success);
@@ -108,7 +108,7 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CreatePersonResult>();
+        var result = await response.Content.ReadFromJsonAsync<BaseResponse>();
 
         Assert.NotNull(result);
         Assert.False(result.Success);

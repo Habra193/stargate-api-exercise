@@ -40,7 +40,7 @@ namespace StargateAPI.Business.Commands
 
             request.Name = request.Name.Trim();
             request.Rank = request.Rank.Trim();
-            request.DutyTitle = request.DutyTitle.Trim().ToUpperInvariant();
+            request.DutyTitle = ToTitleCase(request.DutyTitle);
 
             var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
 
@@ -52,10 +52,20 @@ namespace StargateAPI.Business.Commands
 
             return Task.CompletedTask;
         }
+
+        private static string ToTitleCase(string value)
+        {
+            return string.Join(
+                " ",
+                value.Trim()
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(word => char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant()));
+        }
     }
 
     public class CreateAstronautDutyHandler : IRequestHandler<CreateAstronautDuty, CreateAstronautDutyResult>
     {
+        private const string RetiredDutyTitle = "Retired";
         private readonly StargateContext _context;
 
         public CreateAstronautDutyHandler(StargateContext context)
@@ -64,6 +74,8 @@ namespace StargateAPI.Business.Commands
         }
         public async Task<CreateAstronautDutyResult> Handle(CreateAstronautDuty request, CancellationToken cancellationToken)
         {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
             var query = @"
                 SELECT
                     Id,
@@ -107,7 +119,7 @@ namespace StargateAPI.Business.Commands
                 astronautDetail.CurrentDutyTitle = request.DutyTitle;
                 astronautDetail.CurrentRank = request.Rank;
                 astronautDetail.CareerStartDate = request.DutyStartDate.Date;
-                if (request.DutyTitle == "RETIRED")
+                if (request.DutyTitle == RetiredDutyTitle)
                 {
                     astronautDetail.CareerEndDate = request.DutyStartDate.Date;
                 }
@@ -119,7 +131,7 @@ namespace StargateAPI.Business.Commands
             {
                 astronautDetail.CurrentDutyTitle = request.DutyTitle;
                 astronautDetail.CurrentRank = request.Rank;
-                if (request.DutyTitle == "RETIRED")
+                if (request.DutyTitle == RetiredDutyTitle)
                 {
                     astronautDetail.CareerEndDate = request.DutyStartDate.AddDays(-1).Date;
                 }
@@ -160,6 +172,7 @@ namespace StargateAPI.Business.Commands
             await _context.AstronautDuties.AddAsync(newAstronautDuty);
 
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync(cancellationToken);
 
             return new CreateAstronautDutyResult()
             {
