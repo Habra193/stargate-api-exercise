@@ -377,6 +377,36 @@ public class GetAstronautDutiesByNameTests : IClassFixture<StargateApiFactory>
         {
             new CreateAstronautDuty
             {
+                Name = "John Doe!",
+                Rank = "CAPT",
+                DutyTitle = "Pilot",
+                DutyStartDate = new DateTime(2026, 1, 15)
+            }
+        };
+        yield return new object[]
+        {
+            new CreateAstronautDuty
+            {
+                Name = "John Doe",
+                Rank = "CAPT!",
+                DutyTitle = "Pilot",
+                DutyStartDate = new DateTime(2026, 1, 15)
+            }
+        };
+        yield return new object[]
+        {
+            new CreateAstronautDuty
+            {
+                Name = "John Doe",
+                Rank = "CAPT",
+                DutyTitle = "Pilot!",
+                DutyStartDate = new DateTime(2026, 1, 15)
+            }
+        };
+        yield return new object[]
+        {
+            new CreateAstronautDuty
+            {
                 Name = "John Doe",
                 Rank = "CAPT",
                 DutyTitle = "Pilot",

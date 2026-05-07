@@ -2,6 +2,7 @@
 using MediatR.Pipeline;
 using Microsoft.EntityFrameworkCore;
 using StargateAPI.Business.Data;
+using StargateAPI.Business.Validation;
 using StargateAPI.Controllers;
 
 namespace StargateAPI.Business.Commands
@@ -20,6 +21,8 @@ namespace StargateAPI.Business.Commands
         }
         public Task Process(CreatePerson request, CancellationToken cancellationToken)
         {
+            if (!InputValidation.IsValidPersonName(request.Name)) throw new BadHttpRequestException("Bad Request");
+
             var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
 
             if (person is not null) throw new BadHttpRequestException("Bad Request");

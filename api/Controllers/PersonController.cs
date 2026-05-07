@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using StargateAPI.Business.Commands;
 using StargateAPI.Business.Queries;
+using StargateAPI.Business.Validation;
 using System.Net;
 
 namespace StargateAPI.Controllers
@@ -42,6 +43,10 @@ namespace StargateAPI.Controllers
                 }
 
                 name = name.Trim();
+                if (!InputValidation.IsValidPersonName(name))
+                {
+                    return this.GetErrorResponse("Person name can only contain letters, numbers, spaces, apostrophes, and hyphens", HttpStatusCode.BadRequest);
+                }
 
                 var exists = await _mediator.Send(new GetPersonByName()
                 {
@@ -79,6 +84,10 @@ namespace StargateAPI.Controllers
 
                 oldName = oldName.Trim();
                 request.NewName = request.NewName.Trim();
+                if (!InputValidation.IsValidPersonName(request.NewName))
+                {
+                    return this.GetErrorResponse("Person name can only contain letters, numbers, spaces, apostrophes, and hyphens", HttpStatusCode.BadRequest);
+                }
 
                 var existingPerson = await _mediator.Send(new GetPersonByName()
                 {

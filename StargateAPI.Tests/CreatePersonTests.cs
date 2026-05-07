@@ -66,6 +66,39 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
     }
 
     [Fact]
+    public async Task CreatePerson_WithAllowedPunctuation_ReturnsCreatedPerson()
+    {
+        var client = _factory.CreateClient();
+        var name = $"Anne O'Neil-Smith {Guid.NewGuid():N}";
+
+        var response = await client.PostAsJsonAsync("/Person", name);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<StargateContext>();
+        var person = await context.People.AsNoTracking().SingleOrDefaultAsync(x => x.Name == name);
+
+        Assert.NotNull(person);
+    }
+
+    [Fact]
+    public async Task CreatePerson_WithUnsupportedSpecialCharacter_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/Person", "Invalid Person!");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<BaseResponse>();
+
+        Assert.NotNull(result);
+        Assert.False(result.Success);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.ResponseCode);
+    }
+
+    [Fact]
     public async Task CreatePerson_WithExistingName_ReturnsBadRequest()
     {
         var client = _factory.CreateClient();
@@ -295,6 +328,24 @@ public class CreatePersonTests : IClassFixture<StargateApiFactory>
         var response = await client.PutAsJsonAsync(
             $"/Person/{Uri.EscapeDataString(oldName)}",
             new UpdatePersonNameRequest { NewName = "Jane Doe" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<BaseResponse>();
+
+        Assert.NotNull(result);
+        Assert.False(result.Success);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.ResponseCode);
+    }
+
+    [Fact]
+    public async Task UpdatePersonName_WithUnsupportedSpecialCharacter_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.PutAsJsonAsync(
+            "/Person/John%20Doe",
+            new UpdatePersonNameRequest { NewName = "Invalid Person!" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 

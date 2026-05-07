@@ -1,0 +1,222 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<main id="main-content" class="shell" [class.dark-theme]="theme === 'dark'">
+  <div class="scene-backdrop" aria-hidden="true">
+    <div class="starfield"></div>
+    <div class="orbital-ring"></div>
+    <div class="egyptian-sun"></div>
+    <div class="pyramid-line">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="horizon-glow"></div>
+  </div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Stargate Command</p>
+      <h1>Personnel Operations</h1>
+    </div>
+    <div class="topbar-actions">
+      <button
+        type="button"
+        class="icon-button secondary"
+        (click)="toggleTheme()"
+        [attr.aria-label]="theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'"
+        [title]="theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'"
+      >
+        @if (theme === 'light') {
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M21 12.8A8.5 8.5 0 0 1 11.2 3a7 7 0 1 0 9.8 9.8Z" />
+          </svg>
+        } @else {
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M12 5a1 1 0 0 1-1-1V2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1Zm0 17a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1Zm10-9h-2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2ZM4 13H2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2Zm14.4-6.4a1 1 0 0 1-.7-1.7l1.4-1.4a1 1 0 1 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-.7.3ZM4.2 20.8a1 1 0 0 1-.7-1.7l1.4-1.4a1 1 0 1 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-.7.3Zm15.6 0a1 1 0 0 1-.7-.3l-1.4-1.4a1 1 0 1 1 1.4-1.4l1.4 1.4a1 1 0 0 1-.7 1.7ZM5.6 6.6a1 1 0 0 1-.7-.3L3.5 4.9a1 1 0 1 1 1.4-1.4l1.4 1.4a1 1 0 0 1-.7 1.7ZM12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z" />
+          </svg>
+        }
+      </button>
+      <button
+        type="button"
+        class="secondary"
+        (click)="refresh()"
+        [disabled]="isBusy"
+        [attr.aria-busy]="isBusy"
+      >
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  @if (alertMessage) {
+    <section
+      class="alert"
+      [class.error]="alertType === 'error'"
+      [attr.role]="alertType === 'error' ? 'alert' : 'status'"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {{ alertMessage }}
+    </section>
+  }
+
+  <section class="workspace" aria-label="Personnel workspace">
+    <aside class="people-panel" aria-labelledby="people-heading">
+      <div class="panel-heading">
+        <h2 id="people-heading">People</h2>
+        <span aria-label="Total people">{{ people.length }}</span>
+      </div>
+
+      <form class="inline-form" (ngSubmit)="addPerson()" aria-labelledby="add-person-heading">
+        <h3 id="add-person-heading" class="sr-only">Add person</h3>
+        <label class="sr-only" for="newPersonName">New person name</label>
+        <input
+          id="newPersonName"
+          type="text"
+          name="newPersonName"
+          autocomplete="name"
+          [pattern]="personNamePattern"
+          placeholder="New person name"
+          title="Use letters, numbers, spaces, apostrophes, and hyphens only."
+          [(ngModel)]="newPersonName"
+        />
+        <button type="submit" [disabled]="isBusy">Add</button>
+      </form>
+
+      <label class="field" for="personFilter">
+        <span>Find person</span>
+        <input
+          id="personFilter"
+          type="search"
+          name="personFilter"
+          placeholder="Search by name"
+          [(ngModel)]="personFilter"
+        />
+      </label>
+
+      <div class="people-list" role="list" aria-label="People">
+        @for (person of filteredPeople; track person.personId) {
+          <button
+            type="button"
+            class="person-row"
+            role="listitem"
+            [class.active]="selectedPerson?.personId === person.personId"
+            [attr.aria-pressed]="selectedPerson?.personId === person.personId"
+            [attr.aria-label]="'Select ' + person.name + ', ' + (person.currentDutyTitle || 'no duty assigned')"
+            (click)="selectPerson(person)"
+          >
+            <span>{{ person.name }}</span>
+            <small>{{ person.currentDutyTitle || 'No duty assigned' }}</small>
+          </button>
+        } @empty {
+          <p class="empty">No people found.</p>
+        }
+      </div>
+    </aside>
+
+    <section class="detail-panel" aria-labelledby="detail-heading">
+      @if (selectedPerson) {
+        <div class="person-summary">
+          <div>
+            <p class="eyebrow">Selected Person</p>
+            <h2 id="detail-heading">{{ selectedPerson.name }}</h2>
+          </div>
+          <div class="status-block">
+            <span><span class="sr-only">Current rank: </span>{{ selectedPerson.currentRank || 'No rank' }}</span>
+            <strong><span class="sr-only">Current duty: </span>{{ selectedPerson.currentDutyTitle || 'No active duty' }}</strong>
+          </div>
+        </div>
+
+        <div class="tools-grid">
+          <form class="tool-panel" (ngSubmit)="renameSelectedPerson()">
+            <h3 id="rename-heading">Rename Person</h3>
+            <label class="field" for="renameTo">
+              <span>New name</span>
+              <input
+                id="renameTo"
+                type="text"
+                name="renameTo"
+                autocomplete="name"
+                [pattern]="personNamePattern"
+                title="Use letters, numbers, spaces, apostrophes, and hyphens only."
+                [(ngModel)]="renameTo"
+              />
+            </label>
+            <button type="submit" [disabled]="isBusy">Save Name</button>
+          </form>
+
+          <form class="tool-panel" (ngSubmit)="addDuty()">
+            <h3>Add Duty</h3>
+            <div class="form-grid">
+              <label class="field" for="rank">
+                <span>Rank</span>
+                <input
+                  id="rank"
+                  type="text"
+                  name="rank"
+                  [pattern]="plainTextPattern"
+                  title="Use letters, numbers, and spaces only."
+                  [(ngModel)]="dutyForm.rank"
+                />
+              </label>
+              <label class="field" for="dutyTitle">
+                <span>Duty title</span>
+                <input
+                  id="dutyTitle"
+                  type="text"
+                  name="dutyTitle"
+                  [pattern]="plainTextPattern"
+                  title="Use letters, numbers, and spaces only."
+                  [(ngModel)]="dutyForm.dutyTitle"
+                />
+              </label>
+              <label class="field" for="dutyStartDate">
+                <span>Start date</span>
+                <input id="dutyStartDate" type="date" name="dutyStartDate" [(ngModel)]="dutyForm.dutyStartDate" />
+              </label>
+            </div>
+            <button type="submit" [disabled]="isBusy">Add Duty</button>
+          </form>
+        </div>
+
+        <section class="history" aria-labelledby="history-heading">
+          <div class="panel-heading">
+            <h2 id="history-heading">Duty History</h2>
+            <span aria-label="Total duty records">{{ duties.length }}</span>
+          </div>
+
+          <table class="duty-table">
+            <caption class="sr-only">Duty history for {{ selectedPerson.name }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Duty</th>
+                <th scope="col">Start</th>
+                <th scope="col">End</th>
+              </tr>
+            </thead>
+            <tbody>
+            @for (duty of duties; track duty.id) {
+              <tr>
+                <td>{{ duty.rank }}</td>
+                <td>{{ duty.dutyTitle }}</td>
+                <td>{{ formatDate(duty.dutyStartDate) }}</td>
+                <td>{{ duty.dutyEndDate ? formatDate(duty.dutyEndDate) : 'Current' }}</td>
+              </tr>
+            }
+            </tbody>
+          </table>
+
+          @if (!duties.length) {
+            <p class="empty">No duties recorded for this person.</p>
+          }
+        </section>
+      } @else {
+        <div class="blank-state" id="detail-heading">
+          <p class="eyebrow">Ready</p>
+          <h2>Select a person to view duties</h2>
+        </div>
+      }
+    </section>
+  </section>
+</main>

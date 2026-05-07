@@ -3,6 +3,7 @@ using MediatR;
 using MediatR.Pipeline;
 using Microsoft.EntityFrameworkCore;
 using StargateAPI.Business.Data;
+using StargateAPI.Business.Validation;
 using StargateAPI.Controllers;
 using System.Net;
 
@@ -41,6 +42,13 @@ namespace StargateAPI.Business.Commands
             request.Name = request.Name.Trim();
             request.Rank = request.Rank.Trim();
             request.DutyTitle = ToTitleCase(request.DutyTitle);
+
+            if (!InputValidation.IsValidPersonName(request.Name) ||
+                !InputValidation.IsValidRankOrDutyTitle(request.Rank) ||
+                !InputValidation.IsValidRankOrDutyTitle(request.DutyTitle))
+            {
+                throw new BadHttpRequestException("Bad Request");
+            }
 
             var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
 
